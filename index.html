@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="다육이 소원">
+<meta name="theme-color" content="#e7f4ec">
+<title>다육이 소원 공작소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one-screen tablet app. A single stage card swaps between start → 4 picture questions → magic search → result; staff drawer slides in from the right. */
+:root{
+  --bg:#e7f4ec; --bg2:#d3ecdf; --card:#ffffff; --ink:#1f3d2f; --ink-soft:#557466;
+  --leaf:#3f9a67; --leaf-deep:#2b7a4f; --pink:#ff7a9c; --sun:#ffd25c; --sky:#8fd3f0;
+  --line:#c5e2d2; --chip:#f2faf5; --danger:#d9534f;
+  --display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13241c; --bg2:#1a3227; --card:#1e3a2d; --ink:#eaf7ef; --ink-soft:#a9c9b8;
+  --leaf:#6cc890; --leaf-deep:#8fe0ad; --pink:#ff8fac; --sun:#ffd96f; --sky:#7cc6e6;
+  --line:#2f5442; --chip:#244536; --danger:#ff7b76; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13241c; --bg2:#1a3227; --card:#1e3a2d; --ink:#eaf7ef; --ink-soft:#a9c9b8;
+  --leaf:#6cc890; --leaf-deep:#8fe0ad; --pink:#ff8fac; --sun:#ffd96f; --sky:#7cc6e6;
+  --line:#2f5442; --chip:#244536; --danger:#ff7b76; color-scheme:dark}
+
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;
+  background-image:radial-gradient(circle at 12% 18%,var(--bg2) 0 90px,transparent 91px),
+  radial-gradient(circle at 88% 82%,var(--bg2) 0 130px,transparent 131px);
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:16px;box-sizing:border-box;gap:14px}
+header{width:100%;max-width:980px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-size:clamp(20px,3.4vw,28px);color:var(--leaf-deep);display:flex;align-items:center;gap:8px}
+.brand small{font-family:var(--body);font-size:14px;color:var(--ink-soft)}
+.iconbtn{border:2px solid var(--line);background:var(--card);color:var(--ink-soft);border-radius:14px;
+  font:inherit;font-size:14px;padding:8px 12px;cursor:pointer}
+.iconbtn:focus-visible,.choice:focus-visible,.big:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+
+.stage{width:100%;max-width:980px;background:var(--card);border-radius:36px;border:3px solid var(--line);
+  box-shadow:0 10px 0 var(--line);padding:clamp(18px,4vw,40px);box-sizing:border-box;position:relative;flex:1;
+  display:flex;flex-direction:column}
+.screen{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;flex:1;animation:pop .45s ease}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:none;opacity:1}}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.25}
+h1{font-size:clamp(34px,6.4vw,62px);color:var(--leaf-deep)}
+h1 em{font-style:normal;color:var(--pink)}
+h2{font-size:clamp(28px,5vw,46px)}
+.lead{font-size:clamp(18px,2.6vw,24px);color:var(--ink-soft);margin:0;max-width:30ch;line-height:1.5;word-break:keep-all}
+
+.big{touch-action:manipulation;font-family:var(--display);font-size:clamp(26px,4vw,36px);border:none;border-radius:999px;
+  padding:18px 46px;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 7px 0 #d9547a;
+  transition:transform .1s}
+.big:active{transform:translateY(5px);box-shadow:0 2px 0 #d9547a}
+.big.green{background:var(--leaf);box-shadow:0 7px 0 var(--leaf-deep)}
+.big:disabled{opacity:.45;cursor:not-allowed}
+
+/* shelf of 5 friends on start screen */
+.shelf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:100%;max-width:820px}
+.friend{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.friend svg{width:100%;max-width:130px;height:auto}
+.friend b{font-family:var(--display);font-weight:400;font-size:clamp(14px,2.2vw,20px)}
+.left{font-size:14px;color:var(--ink-soft);font-variant-numeric:tabular-nums;background:var(--chip);
+  border-radius:999px;padding:2px 10px}
+.left.out{color:var(--danger)}
+.friend.gone svg{filter:grayscale(1);opacity:.4}
+.bob{animation:bob 2.6s ease-in-out infinite}
+.friend:nth-child(2) .bob{animation-delay:.3s}.friend:nth-child(3) .bob{animation-delay:.6s}
+.friend:nth-child(4) .bob{animation-delay:.9s}.friend:nth-child(5) .bob{animation-delay:1.2s}
+@keyframes bob{50%{transform:translateY(-6px)}}
+
+/* progress sprouts */
+.sprouts{display:flex;gap:14px;justify-content:center}
+.sprout{width:34px;height:34px;border-radius:50%;background:var(--chip);border:3px solid var(--line);
+  display:grid;place-items:center;font-size:18px;transition:.3s}
+.sprout.done{background:var(--leaf);border-color:var(--leaf-deep)}
+.sprout.now{border-color:var(--pink);transform:scale(1.15)}
+.qnum{font-family:var(--display);color:var(--pink);font-size:20px}
+
+.choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;width:100%;max-width:900px}
+.choice{touch-action:manipulation;user-select:none;-webkit-user-select:none;border:3px solid var(--line);background:var(--chip);border-radius:24px;padding:clamp(12px,2.6vmin,26px) 4px clamp(10px,2.2vmin,22px);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:8px;font:inherit;color:var(--ink);min-width:0;
+  transition:transform .12s,border-color .12s}
+.choice:hover{transform:translateY(-4px);border-color:var(--leaf)}
+.choice.picked{border-color:var(--pink);background:var(--card);transform:scale(1.06)}
+.choice .pic{font-size:clamp(38px,8vmin,80px);line-height:1}
+.choice .sw{width:clamp(50px,10vmin,96px);aspect-ratio:1;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 3px var(--line);max-width:100%;display:grid;place-items:center}
+.choice .sw b{font-size:clamp(24px,5vmin,46px);line-height:1}
+.choice span{font-family:var(--display);font-size:clamp(16px,3vmin,26px);word-break:keep-all;line-height:1.2}
+
+/* magic */
+.magic svg{width:min(240px,60vw);height:auto}
+.spin{animation:wiggle .5s ease-in-out infinite alternate}
+@keyframes wiggle{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.dots span{display:inline-block;animation:bob 1s infinite}.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+
+/* result */
+.result{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:center;width:100%;text-align:left}
+.result .hero{display:flex;flex-direction:column;align-items:center;gap:6px}
+.result .hero svg{width:min(300px,70vw);height:auto}
+.tag{font-family:var(--display);background:var(--sun);color:#5a3d00;border-radius:999px;padding:8px 26px;font-size:clamp(24px,3.6vw,34px);text-align:center;word-break:keep-all}
+.r-title{font-size:clamp(20px,3vw,26px);color:var(--ink-soft);font-family:var(--display)}
+.r-name{font-size:clamp(38px,6vw,60px);color:var(--leaf-deep)}
+.r-real{font-size:16px;color:var(--ink-soft)}
+.why{background:var(--chip);border-radius:20px;padding:14px 18px;font-size:clamp(17px,2.3vw,21px);line-height:1.55;margin:0}
+.care{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.care div{word-break:keep-all;border:2px dashed var(--line);border-radius:18px;padding:10px 6px;text-align:center;font-size:15px;line-height:1.35;min-width:0}
+.care b{display:block;font-size:30px;margin-bottom:2px}
+.wish{font-family:var(--display);font-size:clamp(20px,2.8vw,26px);color:var(--pink);margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;width:100%}
+.staffnote{font-size:15px;color:var(--ink-soft);background:var(--chip);border-radius:12px;padding:6px 12px;font-variant-numeric:tabular-nums}
+
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.confetti i{position:absolute;top:-20px;width:12px;height:16px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* staff drawer */
+.drawer{position:fixed;inset:0;background:rgb(0 0 0 / .35);display:flex;justify-content:flex-end;z-index:10}
+.panel{background:var(--card);color:var(--ink);width:min(420px,100%);height:100%;overflow:auto;padding:22px 20px;box-sizing:border-box;
+  display:flex;flex-direction:column;gap:14px;border-left:3px solid var(--line)}
+.panel h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0}
+.panel table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.panel td,.panel th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left;font-size:16px}
+.panel th{font-size:13px;color:var(--ink-soft);font-weight:400;letter-spacing:.04em}
+.panel td.n{text-align:right}
+.bar{height:8px;background:var(--chip);border-radius:9px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--leaf)}
+.pbtn{font:inherit;font-size:16px;padding:12px;border-radius:14px;border:2px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.pbtn.warn{border-color:var(--danger);color:var(--danger)}
+.pbtn:disabled{opacity:.4}
+.sync{font-size:14px;color:var(--ink-soft);line-height:1.5}
+.adj{border:2px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.adj h4{margin:0;font-family:var(--display);font-weight:400;font-size:20px}
+.adjrow{display:flex;align-items:center;gap:8px}
+.adjname{flex:1;min-width:0;font-size:16px}
+.pbtn.sm{padding:8px 12px;font-size:15px}
+.pbtn.step{width:46px;height:46px;padding:0;font-size:24px;line-height:1;border-radius:50%}
+.adjnum{min-width:58px;height:46px;font:inherit;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;border:2px dashed var(--leaf);
+  border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}
+.adjrow input{width:76px;height:42px;font:inherit;font-size:20px;text-align:center;border:2px solid var(--leaf);border-radius:12px;background:var(--card);color:var(--ink)}
+.pbtn:focus-visible,.adjnum:focus-visible,.adjrow input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.pindots{display:flex;gap:12px;justify-content:center;padding-block:6px}
+.pindots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--leaf);box-sizing:border-box}
+.pindots i.on{background:var(--leaf)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pinpad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:300px;width:100%;margin-inline:auto}
+.pinkey{height:64px;font-size:26px;font-weight:700}
+.pbtn.onbtn{background:var(--leaf);border-color:var(--leaf-deep);color:#fff}
+.sheetlink{color:var(--leaf-deep);font-weight:700;font-size:15px}
+.gate{position:fixed;inset:0;background:rgb(0 0 0 / .4);display:grid;place-items:center;z-index:12;padding:16px}
+.gatebox{word-break:keep-all;background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:28px;padding:20px;width:min(360px,100%);
+  display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
+.gatehead{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-size:24px}
+.gatehead b{font-weight:400}
+.demotag{font-family:var(--body);font-size:13px;background:var(--sun);color:#5a3d00;border-radius:999px;padding:2px 10px}
+.storypic{width:min(100%,760px,calc(40vh * 400 / 240));aspect-ratio:400/240;background:linear-gradient(var(--sky),var(--bg) 70%);border-radius:28px;
+  border:3px solid var(--line);overflow:hidden;cursor:pointer;animation:pop .5s ease}
+.storypic > svg{width:100%;height:100%;display:block}
+.storycap{font-family:var(--display);font-size:clamp(20px,min(3vw,3.6vh),30px);line-height:1.35;margin:0;max-width:30ch;text-wrap:balance;word-break:keep-all;color:var(--ink)}
+.storydots{display:flex;gap:8px}
+.storydots i{width:34px;height:8px;border-radius:9px;background:var(--line);overflow:hidden;display:block}
+.storydots i.done{background:var(--leaf)}
+.storydots i b{display:block;height:100%;width:100%;background:var(--pink);transform-origin:left;animation:fillbar linear forwards}
+@keyframes fillbar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.sheetlink{color:var(--leaf-deep);font-weight:700;font-size:15px}
+.confirm{border:2px solid var(--danger);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.confirm .row{display:flex;gap:8px}.confirm .row button{flex:1}
+
+@media (orientation:portrait) and (min-width:641px){
+  .choices{gap:16px}
+  .choice{min-height:19vh;justify-content:center;gap:14px}
+  .choice .pic{font-size:clamp(48px,10vw,96px)}
+  .choice .sw{width:clamp(70px,13vw,120px)}
+  .choice .sw b{font-size:clamp(32px,6vw,56px)}
+  .choice span{font-size:clamp(20px,3.6vw,30px)}
+}
+@media (max-width:640px){
+  .choices{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .result{grid-template-columns:1fr;text-align:center}
+}
+@media (max-width:440px){.choices{grid-template-columns:repeat(2,minmax(0,1fr))}.shelf{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body style="margin:0">
+
+
+<div class="wrap">
+  <header>
+    <div class="brand">🌱 다육이 소원 공작소 <small>Justwalk · 네임스티커</small><span class="demotag" id="modeTag" hidden>이 기기만</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" id="soundBtn" type="button" aria-pressed="true">소리 켜짐</button>
+      <button class="iconbtn" id="staffBtn" type="button">선생님 메뉴</button>
+    </div>
+  </header>
+  <main class="stage" id="stage"></main>
+</div>
+<div class="confetti" id="confetti"></div>
+<div class="drawer" id="drawer" hidden></div>
+<div class="gate" id="gate" hidden></div>
+
+<script>
+const TOTAL = 40;
+const KINDS = {
+  star:  {name:"반짝 보석이", real:"수", basket:1, color:"#a8dcef",
+          trait:"상상하고 꿈꾸기를 좋아하는", wish:"멋진 꿈이 반짝 이루어지게 해 줄게!",
+          care:[["💧","흙이 바싹 마르면 조금"],["🌤️","센 햇빛보다 밝은 그늘"],["💎","잎에 작은 창문이 있어요"]]},
+  bean:  {name:"새콤 사과사탕", real:"애플캔디", basket:2, color:"#ffc2b0",
+          trait:"친구랑 놀면 신나는", wish:"친구랑 웃음이 가득하게 해 줄게!",
+          care:[["💧","흙이 바싹 마르면 물 주기"],["☀️","햇빛 받으면 볼이 빨개져요"],["🍎","사탕처럼 동글동글한 잎"]]},
+  rose:  {name:"장미 요정", real:"어메이징그레이스", basket:3, color:"#f7b8cc",
+          trait:"마음씨가 곱고 꾸미기를 좋아하는", wish:"예쁜 마음이 쑥쑥 자라게 해 줄게!",
+          care:[["💧","흙이 바싹 마르면 물 주기"],["☀️","햇빛을 아주 좋아해요"],["🌸","하얀 가루는 닦지 말아요"]]},
+  brave: {name:"뾰족 용감이", real:"엘린", basket:4, color:"#ffe08a",
+          trait:"씩씩하고 용감한", wish:"용기가 필요할 때 힘을 줄게!",
+          care:[["💧","흙이 바싹 마르면 물 주기"],["☀️","햇빛을 아주 좋아해요"],["👑","빨간 뾰족 끝이 왕관 같아요"]]},
+  bunny: {name:"동글 나무", real:"미니염좌", basket:5, color:"#bfe6a6",
+          trait:"포근하고 다정한", wish:"가족이랑 따뜻하게 지내게 해 줄게!",
+          care:[["💧","흙이 바싹 마르면 물 주기"],["☀️","밝은 창가가 좋아요"],["🌳","작은 나무처럼 자라요"]]},
+};
+const ORDER = ["star","bean","rose","brave","bunny"];
+
+const QUESTIONS = [
+  {q:"어떤 색깔이 제일 좋아?", opts:[
+    {t:"초록", sw:"#3f8f55", p:"🍀", s:{star:2}},   {t:"하늘색", sw:"#8fd3f0", p:"🌊", s:{star:2}},
+    {t:"빨강", sw:"#ff5f5f", p:"🍓", s:{bean:2}},   {t:"주황", sw:"#ff9f4a", p:"🍊", s:{bean:2}},
+    {t:"분홍", sw:"#f6a9b8", p:"🌸", s:{rose:2}},   {t:"보라", sw:"#b79cf0", p:"🍇", s:{rose:2}},
+    {t:"노랑", sw:"#f6dc4c", p:"🌻", s:{brave:2}},  {t:"금색", sw:"#e2b33c", p:"👑", s:{brave:2}},
+    {t:"연두", sw:"#b8dc5c", p:"🌱", s:{bunny:2}},  {t:"갈색", sw:"#a87a52", p:"🌰", s:{bunny:2}} ]},
+  {q:"어떤 동물 친구가 좋아?", opts:[
+    {t:"돌고래", p:"🐬", s:{star:2}},  {t:"거북이", p:"🐢", s:{star:2}},
+    {t:"강아지", p:"🐶", s:{bean:2}},  {t:"원숭이", p:"🐵", s:{bean:2}},
+    {t:"고양이", p:"🐱", s:{rose:2}},  {t:"다람쥐", p:"🐿️", s:{rose:2}},
+    {t:"사자", p:"🦁", s:{brave:2}},   {t:"공룡", p:"🦖", s:{brave:2}},
+    {t:"토끼", p:"🐰", s:{bunny:2}},   {t:"판다", p:"🐼", s:{bunny:2}} ]},
+  {q:"뭐 하고 놀 때 제일 신나?", opts:[
+    {t:"별 구경", p:"🔭", s:{star:2}},      {t:"책 읽기", p:"📚", s:{star:2}},
+    {t:"친구랑 놀기", p:"🤸", s:{bean:2}},  {t:"노래 부르기", p:"🎤", s:{bean:2}},
+    {t:"그림 그리기", p:"🖍️", s:{rose:2}},  {t:"춤추기", p:"💃", s:{rose:2}},
+    {t:"공놀이", p:"⚽", s:{brave:2}},      {t:"보물 찾기", p:"🗺️", s:{brave:2}},
+    {t:"꼭 안기", p:"🤗", s:{bunny:2}},     {t:"요리 놀이", p:"🍳", s:{bunny:2}} ]},
+  {q:"어떤 소원을 빌고 싶어?", opts:[
+    {t:"멋진 꿈", p:"🌟", s:{star:3}},       {t:"우주 여행", p:"🚀", s:{star:3}},
+    {t:"친구 많이", p:"🎈", s:{bean:3}},     {t:"매일 웃기", p:"😄", s:{bean:3}},
+    {t:"고운 마음", p:"💗", s:{rose:3}},     {t:"꽃처럼 활짝", p:"🌷", s:{rose:3}},
+    {t:"용기", p:"🦸", s:{brave:3}},         {t:"튼튼한 몸", p:"💪", s:{brave:3}},
+    {t:"행복한 가족", p:"🏡", s:{bunny:3}},  {t:"가족 여행", p:"🚗", s:{bunny:3}} ]},
+];
+
+/* ---------- plant drawings ---------- */
+function pot(fill){
+  return `<path d="M52 128h96l-10 60h-76z" fill="${fill}"/><rect x="44" y="118" width="112" height="16" rx="8" fill="${fill}" stroke="rgba(0,0,0,.09)" stroke-width="2"/>
+  <circle cx="84" cy="156" r="5" fill="#3a2a2a"/><circle cx="116" cy="156" r="5" fill="#3a2a2a"/>
+  <circle cx="86" cy="154" r="1.6" fill="#fff"/><circle cx="118" cy="154" r="1.6" fill="#fff"/>
+  <path d="M92 166q8 8 16 0" stroke="#3a2a2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="72" cy="166" rx="7" ry="4" fill="#ff7a9c" opacity=".5"/><ellipse cx="128" cy="166" rx="7" ry="4" fill="#ff7a9c" opacity=".5"/>`;
+}
+let GID=0;
+function leafPath(L,W,tip){
+  return tip==="point"
+    ? `M100 100C${100-W} ${100-L*.42} ${100-W*.55} ${100-L*.86} 100 ${100-L}C${100+W*.55} ${100-L*.86} ${100+W} ${100-L*.42} 100 100Z`
+    : `M100 100C${100-W} ${100-L*.3} ${100-W*.95} ${100-L} 100 ${100-L}C${100+W*.95} ${100-L} ${100+W} ${100-L*.3} 100 100Z`;
+}
+/* rings: outer → inner. each {L,W,n,base,tip,edge,stroke,sw,shape,spike,dots,off} */
+function rosette(rings,squash,cy){
+  let defs="",s="";
+  rings.forEach((r,ri)=>{
+    const id="g"+(++GID);
+    defs+=`<linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${r.base}"/><stop offset=".55" stop-color="${r.base}"/><stop offset="1" stop-color="${r.edge}"/></linearGradient>`;
+    for(let i=0;i<r.n;i++){
+      const a=i*360/r.n+(r.off??ri*(180/r.n));
+      s+=`<g transform="rotate(${a} 100 100)"><path d="${leafPath(r.L,r.W,r.shape)}" fill="url(#${id})" stroke="${r.stroke}" stroke-width="${r.sw}" stroke-linejoin="round"/>`;
+      if(r.spike) s+=`<path d="M98 ${102-r.L} L100 ${96-r.L} L102 ${102-r.L}Z" fill="${r.spike}"/>`;
+      if(r.dots) s+=`<circle cx="96" cy="${100-r.L*.6}" r="1.3" fill="#9a5b4a" opacity=".55"/><circle cx="104" cy="${100-r.L*.72}" r="1.1" fill="#9a5b4a" opacity=".55"/>`;
+      if(r.window) s+=`<path d="${leafPath(r.L*.55,r.W*.55,"point")}" transform="translate(0 ${-r.L*.42})" fill="#b6efc4" opacity=".75"/>
+        <path d="M100 ${100-r.L*.5}V${100-r.L*.9}M96 ${100-r.L*.55}L99 ${100-r.L*.82}M104 ${100-r.L*.55}L101 ${100-r.L*.82}" stroke="#e9fff0" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>`;
+      s+=`</g>`;
+    }
+  });
+  return `<defs>${defs}</defs><g transform="translate(100 120) scale(1.32) translate(-100 -120)"><g transform="translate(0 ${cy-100*squash}) scale(1 ${squash})">${s}</g></g>`;
+}
+function plantSVG(k){
+  let g="";
+  if(k==="star"){ // 수: chunky dark-green triangles with see-through windows
+    g=rosette([
+      {L:46,W:19,n:7,base:"#3f7f4c",edge:"#5fa56b",stroke:"#2c5e37",sw:2,shape:"point",window:1},
+      {L:34,W:16,n:6,base:"#4a9058",edge:"#6db878",stroke:"#2c5e37",sw:2,shape:"point",window:1},
+      {L:20,W:11,n:4,base:"#5aa366",edge:"#84cc8c",stroke:"#2c5e37",sw:1.8,shape:"point"}],.85,104);
+    g+=`<path d="M152 36l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#ffd25c"/><circle cx="44" cy="58" r="3" fill="#8fd3f0"/>`;
+  } else if(k==="bean"){ // 애플캔디: spoon leaves, butter-green to candy-red rims, freckles
+    g=rosette([
+      {L:50,W:17,n:8,base:"#dfe6a0",edge:"#ef6f7e",stroke:"#e0566a",sw:2.4,shape:"round",dots:1},
+      {L:37,W:15,n:7,base:"#d4e3a2",edge:"#f07d8b",stroke:"#e0566a",sw:2.4,shape:"round",dots:1},
+      {L:23,W:11,n:5,base:"#cfe0ad",edge:"#f48a96",stroke:"#e0566a",sw:2.2,shape:"round"},
+      {L:11,W:7,n:4,base:"#e6efc9",edge:"#f59aa5",stroke:"#e0566a",sw:2,shape:"round"}],.7,96);
+    g+=`<circle cx="150" cy="42" r="11" fill="#ff6b6b"/><path d="M150 32q3-8 9-8" stroke="#5c8a3a" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="146" cy="38" rx="3" ry="2" fill="#fff" opacity=".7"/>`;
+  } else if(k==="rose"){ // 어메이징그레이스: peach outer, frosty blue-lilac heart
+    g=rosette([
+      {L:52,W:16,n:11,base:"#f6c3a6",edge:"#f39a7a",stroke:"#e0805f",sw:1.8,shape:"point"},
+      {L:42,W:14,n:10,base:"#ecc4c8",edge:"#e7a2a6",stroke:"#d78a90",sw:1.6,shape:"point"},
+      {L:31,W:11,n:9,base:"#cbd8de",edge:"#e2b3bb",stroke:"#b99aa8",sw:1.5,shape:"point"},
+      {L:20,W:8,n:7,base:"#c3d6dc",edge:"#d9a5b0",stroke:"#b08c9c",sw:1.4,shape:"point"},
+      {L:10,W:5,n:5,base:"#cfdee2",edge:"#d29aa6",stroke:"#a8818f",sw:1.2,shape:"point"}],.7,96);
+  } else if(k==="brave"){ // 엘린: plump lime-yellow leaves with red spike tips
+    g=rosette([
+      {L:48,W:16,n:9,base:"#e7e77a",edge:"#efd36a",stroke:"#c9b444",sw:2,shape:"point",spike:"#c2334d",dots:1},
+      {L:37,W:14,n:8,base:"#e4ec85",edge:"#f0d870",stroke:"#c9b444",sw:2,shape:"point",spike:"#c2334d"},
+      {L:25,W:11,n:6,base:"#dce887",edge:"#e9cf73",stroke:"#bfa94a",sw:1.8,shape:"point",spike:"#c2334d"},
+      {L:13,W:7,n:5,base:"#a88a5e",edge:"#8a5a4a",stroke:"#7a4c3e",sw:1.4,shape:"point",spike:"#c2334d"}],.7,96);
+  } else if(k==="bunny"){ // 미니염좌: little tree, round paddle leaves with orange-red rims
+    const id="g"+(++GID);
+    g=`<defs><radialGradient id="${id}" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#e9f27a"/><stop offset=".75" stop-color="#b8dc5c"/><stop offset="1" stop-color="#9ccc52"/></radialGradient></defs>
+      <path d="M100 124V82M100 104Q86 96 74 76M100 96Q114 88 126 70M100 86Q102 70 100 52" stroke="#8a6a4a" stroke-width="6" stroke-linecap="round" fill="none"/>`;
+    const cluster=(x,y,sc)=>{let s=`<g transform="translate(${x} ${y}) scale(${sc})">`;
+      [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy],i)=>{const a=i*90+45;
+        s+=`<ellipse cx="0" cy="-14" rx="10" ry="15" fill="url(#${id})" stroke="#ec7b4f" stroke-width="2.4" transform="rotate(${a})"/>`;});
+      return s+`<circle r="3" fill="#f3e46a"/></g>`;};
+    g+=cluster(72,72,1)+cluster(128,66,1)+cluster(100,46,1.05)+cluster(84,96,.75)+cluster(118,92,.75);
+  }
+
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="${KINDS[k].name}"><ellipse cx="100" cy="192" rx="56" ry="6" fill="rgba(0,0,0,.08)"/>${g}${pot(KINDS[k].color)}</svg>`;
+}
+
+/* =====================================================================
+   ★ 설정 — 구글 시트 Apps Script를 배포한 뒤 여기만 고쳐 주세요 ★
+   SCRIPT_URL : Apps Script 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
+                비워 두면 시트 없이 "이 기기 안에서만" 세는 체험 모드로 동작해요.
+   APP_KEY    : Code.gs 맨 위의 APP_KEY와 똑같이
+   SHEET_URL  : (선택) 구글 시트 주소. 선생님 메뉴에 '시트 열기' 링크가 생겨요.
+   ===================================================================== */
+const CONFIG = {
+  SCRIPT_URL: "",
+  APP_KEY: "dayuk-2026",
+  SHEET_URL: "https://docs.google.com/spreadsheets/d/1YWLHve102VGwq-bHA8ejAs8xRBYg8sd8d_VN-lWTuLs/edit"
+};
+
+/* ---------- stock store: one Google Sheet shared by every pad (via Apps Script) ---------- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const REQUIRE_SHARED=!!CONFIG.SCRIPT_URL;
+const newId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const Store = {
+  round:1, picks:[], local:!CONFIG.SCRIPT_URL, status:CONFIG.SCRIPT_URL?"connecting":"local",
+  myLast:[], listeners:[], pending:null, timer:null, lastSync:null,
+  counts(){const c={};ORDER.forEach(k=>c[k]=0);this.picks.forEach(p=>{if(c[p.kind]!=null&&!p.add)c[p.kind]++});return c;},
+  supply(k){return TOTAL+this.picks.reduce((a,p)=>a+(p.kind===k&&p.add?p.add:0),0);},
+  rawLeft(k){return this.supply(k)-this.counts()[k];},
+  left(k){return Math.max(0,this.rawLeft(k));},
+  emit(){this.listeners.forEach(f=>f());},
+  loadLocal(){try{const d=JSON.parse(localStorage.getItem("dayuk-local")||"{}");this.picks=d.picks||[];}catch(e){this.picks=[];}},
+  saveLocal(){try{localStorage.setItem("dayuk-local",JSON.stringify({picks:this.picks}));}catch(e){}},
+
+  /* One call to the sheet script. Plain-text POST avoids the browser's extra CORS check. */
+  async api(action,data={}){
+    const ctrl=new AbortController(), to=setTimeout(()=>ctrl.abort(),30000);
+    try{
+      const r=await fetch(CONFIG.SCRIPT_URL,{method:"POST",redirect:"follow",signal:ctrl.signal,
+        headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,key:CONFIG.APP_KEY,...data})});
+      if(!r.ok) throw {code:"http",message:"HTTP "+r.status};
+      let j; try{ j=await r.json(); }catch(e){ throw {code:"not_json",message:"시트 스크립트 응답을 읽지 못했어요"}; }
+      if(j.error) throw {code:j.error,message:j.message||j.error};
+      return j;
+    } finally { clearTimeout(to); }
+  },
+  apply(s){ if(!s) return; this.round=s.round; this.picks=s.picks||[]; this.lastSync=Date.now(); this.status="shared"; this.emit(); },
+  errText(e){
+    switch(e&&e.code){
+      case "bad_key": return "APP_KEY가 Code.gs와 달라요. 두 곳을 똑같이 맞춰 주세요.";
+      case "busy": return "여러 패드가 한꺼번에 눌러서 잠깐 밀렸어요. 다시 눌러 주세요.";
+      case "not_json": return "시트 스크립트 주소(SCRIPT_URL)나 배포 설정(액세스: 모든 사용자)을 확인해 주세요.";
+      default: return "구글 시트에 연결하지 못했어요. 인터넷을 확인해 주세요.";
+    }
+  },
+  async refresh(){
+    try{ const j=await this.api("state"); this.lastErr=null; this.apply(j.state); }
+    catch(e){ this.lastErr=this.errText(e); if(this.status!=="shared"){ this.status="offline"; } this.emit(); }
+  },
+  async init(){
+    if(this.local){ this.loadLocal(); this.emit(); return; }
+    await this.refresh();
+    this.timer=setInterval(()=>{ if(document.visibilityState==="visible") this.refresh(); },15000);
+    document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") this.refresh(); });
+  },
+  async write(action,data,failMsg){
+    try{ const j=await this.api(action,data); this.apply(j.state); return j; }
+    catch(e){ toastSync(failMsg+" ("+this.errText(e)+")"); this.refresh(); return null; }
+  },
+  async adjust(k,delta){
+    if(!delta) return;
+    if(this.local){ this.picks.push({id:newId("a"),kind:k,add:delta,at:Date.now()}); this.saveLocal(); this.emit(); return; }
+    await this.write("adjust",{kind:k,delta},"개수 조정이 저장되지 않았어요.");
+  },
+  async setLeft(k,v){
+    if(this.local){ return this.adjust(k,v-this.rawLeft(k)); }
+    await this.write("setLeft",{kind:k,value:v},"개수 맞추기가 저장되지 않았어요.");
+  },
+  /* Hand out one pot. The sheet script counts again under a lock and only gives a kind that is
+     really left, so two pads can never take the same last pot. Retrying the same request is safe. */
+  async claim(order){
+    if(this.local){
+      for(const k of order){ if(this.left(k)>0){ const id=newId("l"); this.picks.push({id,kind:k,at:Date.now()}); this.saveLocal(); this.myLast.push(id); this.emit(); return {kind:k}; } }
+      return {kind:null};
+    }
+    const reqId=this.pending||newId("r"); this.pending=reqId;
+    let j; try{ j=await this.api("claim",{order,reqId}); }catch(e){ return {error:"net"}; }
+    this.pending=null;
+    if(j.kind && j.id) this.myLast.push(j.id);
+    this.apply(j.state);
+    return {kind:j.kind||null};
+  },
+  async undo(){
+    const id=this.myLast.pop(); if(!id) return;
+    if(this.local){ this.picks=this.picks.filter(p=>p.id!==id); this.saveLocal(); this.emit(); return; }
+    await this.write("undo",{id},"취소가 저장되지 않았어요.");
+  },
+  async reset(){
+    this.myLast=[];
+    if(this.local){ this.picks=[]; this.saveLocal(); this.emit(); return; }
+    await this.write("reset",{},"초기화가 안 됐어요. 다시 눌러 주세요.");
+  }
+};
+let syncMsg="";
+function toastSync(m){syncMsg=m; if(!drawer.hidden) renderDrawer();}
+
+/* ---------- sound ---------- */
+let soundOn=true, actx=null;
+function beep(f=660,d=.09){ if(!soundOn) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain(); o.type="sine"; o.frequency.value=f;
+  g.gain.setValueAtTime(.18,actx.currentTime); g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);
+  o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+d);}catch(e){} }
+function fanfare(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18),i*130));}
+
+/* ---------- app ---------- */
+const stage=document.getElementById("stage"), drawer=document.getElementById("drawer");
+let state={screen:"start", qi:0, answers:[]};
+
+function render(){
+  const s=state.screen;
+  clearTimeout(storyTimer);
+  if(s==="start") renderStart();
+  else if(s==="story") renderStory();
+  else if(s==="q") renderQ();
+  else if(s==="magic") renderMagic();
+  else if(s==="result") renderResult();
+  else if(s==="oops") renderOops();
+  else if(s==="allgone") renderAllGone();
+}
+function totalLeft(){return ORDER.reduce((a,k)=>a+Store.left(k),0);}
+
+
+/* ---------- story: a short original picture story before the questions ----------
+   Inspired by the festival's name-sticker wish activity; new characters, no text from the novel. */
+let storyOn=true; try{ storyOn = localStorage.getItem("dayuk-story")!=="off"; }catch(e){}
+let storyTimer=null;
+const STORY_MS=6000;
+function kid(cx,by,o={}){
+  const s=o.s||1, shirt=o.shirt||"#8fd3f0", hair=o.hair||"#5a3a2a", skin="#ffdcc4", ink="#3a2a2a";
+  const mouth = o.mood==="sad" ? `<path d="M-7 10q7-7 14 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`
+    : o.mood==="oh" ? `<ellipse cx="0" cy="9" rx="4" ry="5" fill="${ink}"/>`
+    : `<path d="M-9 5q9 11 18 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  const brows = o.mood==="sad" ? `<path d="M-15 -11l8 3M15 -11l-8 3" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>` : "";
+  const armL = `<path d="M-18 -40q-16 14 -14 30" stroke="${skin}" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+  const armR = o.wave ? `<path d="M18 -42q18 -10 20 -34" stroke="${skin}" stroke-width="9" fill="none" stroke-linecap="round"/>`
+    : o.hold ? `<path d="M18 -40q20 0 30 -12" stroke="${skin}" stroke-width="9" fill="none" stroke-linecap="round"/>`
+    : `<path d="M18 -40q16 14 14 30" stroke="${skin}" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+  const extra = o.bow ? `<path d="M14 -104l14 -8v16z M14 -104l-2 0" fill="${o.bow}"/><circle cx="14" cy="-104" r="3" fill="${o.bow}"/>` : "";
+  return `<g transform="translate(${cx} ${by}) scale(${s})">
+    <ellipse cx="0" cy="2" rx="26" ry="5" fill="rgba(0,0,0,.08)"/>
+    ${armL}${armR}
+    <rect x="-20" y="-54" width="40" height="54" rx="17" fill="${shirt}"/>
+    <circle cx="0" cy="-80" r="28" fill="${skin}"/>
+    <path d="M-29 -82a29 29 0 0 1 58 0q-12-12-29-9q-17-3-29 9z" fill="${hair}"/>
+    ${extra}
+    <g transform="translate(0 -80)">${brows}
+      <circle cx="-10" cy="-2" r="3.4" fill="${ink}"/><circle cx="10" cy="-2" r="3.4" fill="${ink}"/>
+      <ellipse cx="-17" cy="8" rx="5" ry="3" fill="#ff9fb4" opacity=".6"/><ellipse cx="17" cy="8" rx="5" ry="3" fill="#ff9fb4" opacity=".6"/>
+      ${mouth}</g></g>`;
+}
+function potAt(k,x,y,size,label){
+  const sc=size/200;
+  const tag = label ? `<g transform="translate(${x} ${y}) scale(${sc})"><rect x="68" y="136" width="64" height="15" rx="4" fill="#fff" stroke="#e7d9c9" stroke-width="1.5"/>
+    <text x="100" y="147.5" text-anchor="middle" font-size="10" font-family="Jua, sans-serif" fill="#3a2a2a">${label}</text></g>` : "";
+  return plantSVG(k).replace('<svg ',`<svg x="${x}" y="${y}" width="${size}" height="${size}" `)+tag;
+}
+function bubble(x,y,text,tail="left"){
+  const w=text.length*15+30, h=40, tx= tail==="left"? x+18 : x+w-18;
+  return `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="18" fill="#fff" stroke="#c5e2d2" stroke-width="2.5"/>
+    <path d="M${tx-8} ${y+h-1}l${tail==="left"?-6:6} 14l14 -14z" fill="#fff" stroke="#c5e2d2" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="${tx-10}" y="${y+h-4}" width="20" height="5" fill="#fff"/>
+    <text x="${x+w/2}" y="${y+27}" text-anchor="middle" font-size="19" font-family="Jua, sans-serif" fill="#1f3d2f">${text}</text></g>`;
+}
+const sparkle=(x,y,c="#ffd25c",s=1)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0 -10l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="${c}"/>`;
+const heart=(x,y,s=1)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0 6c-10-7-14-12-10-17 3-3 8-2 10 2 2-4 7-5 10-2 4 5 0 10-10 17z" fill="#ff7a9c"/>`;
+const table=`<rect x="190" y="196" width="190" height="12" rx="6" fill="#d8b98f"/><rect x="200" y="206" width="10" height="30" fill="#c9a77a"/><rect x="360" y="206" width="10" height="30" fill="#c9a77a"/>`;
+const ground=`<ellipse cx="200" cy="236" rx="210" ry="16" fill="#cfe9d9"/>`;
+const STORY=[
+  {t:"봄이는 오늘 마음이 조금 쓸쓸했어요.",
+   d:()=>`${ground}<g transform="translate(150 60)"><ellipse cx="0" cy="0" rx="34" ry="18" fill="#b9c4c9"/><ellipse cx="-22" cy="6" rx="20" ry="13" fill="#b9c4c9"/><ellipse cx="24" cy="6" rx="20" ry="13" fill="#b9c4c9"/>
+       <path d="M-14 26l-3 9M2 28l-3 9M18 26l-3 9" stroke="#8fbfe0" stroke-width="3" stroke-linecap="round"/></g>
+       ${kid(150,226,{mood:"sad",shirt:"#ffb3a7",hair:"#4a3326",bow:"#ff7a9c",s:1.05})}${table}${potAt("bean",246,98,110)}`},
+  {t:"창가의 작은 다육이가 말했어요. “내 화분에 네 이름을 붙여 줄래?”",
+   d:()=>`${ground}${kid(120,226,{mood:"oh",shirt:"#ffb3a7",hair:"#4a3326",bow:"#ff7a9c",s:1.05})}${table}${potAt("bean",236,92,124)}
+       ${bubble(236,30,"안녕, 봄이야!","left")}${sparkle(220,92)}${sparkle(368,110,"#8fd3f0",.8)}`},
+  {t:"봄이는 네임스티커에 이름과 소원을 꼭꼭 눌러 적었어요.",
+   d:()=>`${ground}<g transform="rotate(-4 200 120)"><rect x="92" y="44" width="216" height="140" rx="20" fill="#fff" stroke="#ff9fb7" stroke-width="5"/>
+       <rect x="92" y="44" width="216" height="38" rx="20" fill="#ff9fb7"/><rect x="92" y="66" width="216" height="16" fill="#ff9fb7"/>
+       <text x="200" y="71" text-anchor="middle" font-size="20" font-family="Jua, sans-serif" fill="#fff">이름 스티커</text>
+       <text x="200" y="120" text-anchor="middle" font-size="30" font-family="Jua, sans-serif" fill="#1f3d2f">봄이</text>
+       <text x="200" y="160" text-anchor="middle" font-size="18" font-family="Jua, sans-serif" fill="#557466">“친구랑 같이 웃고 싶어요”</text></g>
+       <g transform="translate(300 170) rotate(40)"><rect x="-6" y="-48" width="12" height="54" rx="3" fill="#ffd25c"/><path d="M-6 6l6 12 6-12z" fill="#f2c9a0"/><path d="M-2 14l2 4 2-4z" fill="#3a2a2a"/><rect x="-6" y="-54" width="12" height="8" rx="3" fill="#ff7a9c"/></g>
+       ${sparkle(80,60)}${sparkle(330,40,"#8fd3f0")}`},
+  {t:"봄이는 날마다 다육이에게 물을 조금 주고 “안녕!” 인사했어요.",
+   d:()=>`${ground}${kid(118,226,{shirt:"#ffb3a7",hair:"#4a3326",bow:"#ff7a9c",hold:1,s:1.05})}
+       <g transform="translate(176 120) rotate(18)"><rect x="-4" y="-6" width="40" height="30" rx="8" fill="#8fd3f0"/><path d="M36 2l22-12 4 6-22 12z" fill="#8fd3f0"/><path d="M4 -6q14-18 28 0" stroke="#5fb3d8" stroke-width="4" fill="none"/></g>
+       <path d="M238 118l-4 8M246 122l-4 8M254 118l-4 8" stroke="#5fb3d8" stroke-width="3" stroke-linecap="round"/>
+       ${table}${potAt("bean",236,92,124,"봄이")}<g transform="translate(350 40)"><circle r="18" fill="#ffd25c"/>${[0,45,90,135,180,225,270,315].map(a=>`<path transform="rotate(${a})" d="M0 -24v-8" stroke="#ffd25c" stroke-width="4" stroke-linecap="round"/>`).join("")}</g>`},
+  {t:"어느 날, 봄이가 먼저 친구에게 말을 걸었어요. “우리 같이 놀래?”",
+   d:()=>`${ground}${kid(130,226,{shirt:"#ffb3a7",hair:"#4a3326",bow:"#ff7a9c",wave:1,s:1.05})}${kid(285,226,{mood:"oh",shirt:"#a8d48a",hair:"#2f2f3a",s:1.05})}
+       ${bubble(40,26,"우리 같이 놀래?","left")}`},
+  {t:"친구가 활짝 웃었어요! 다육이가 소곤소곤 말했어요. “소원을 이룬 건 바로 너의 따뜻한 마음이야.”",
+   d:()=>`${ground}${kid(110,226,{shirt:"#ffb3a7",hair:"#4a3326",bow:"#ff7a9c",wave:1,s:1.05})}${kid(300,226,{shirt:"#a8d48a",hair:"#2f2f3a",wave:1,s:1.05})}
+       ${potAt("bean",150,120,104,"봄이")}${heart(200,52,1.4)}${heart(160,76)}${heart(244,74)}${sparkle(120,40)}${sparkle(290,36,"#8fd3f0")}`},
+  {t:"이제 너랑 꼭 맞는 다육이 친구를 만나러 가 볼까?",
+   d:()=>`${ground}${ORDER.map((k,i)=>potAt(k,2+i*78,86,106)).join("")}${sparkle(40,40)}${sparkle(360,46,"#ff7a9c")}${sparkle(200,30,"#8fd3f0")}`,
+   last:true},
+];
+function renderStory(){
+  const i=state.si||0, S=STORY[i];
+  stage.innerHTML=`<section class="screen story" style="justify-content:center;gap:12px">
+    <div class="storypic" id="storypic" role="img" aria-label="${S.t}"><svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">${S.d()}</svg></div>
+    <p class="storycap">${S.t}</p>
+    <div class="storydots" aria-hidden="true">${STORY.map((_,j)=>`<i class="${j<i?"done":j===i?"now":""}">${j===i?`<b style="animation-duration:${STORY_MS}ms"></b>`:""}</i>`).join("")}</div>
+    <div class="actions" style="align-items:center">
+      ${S.last?`<button class="iconbtn" id="storyAgain" type="button">↺ 이야기 다시 보기</button><button class="big" id="storyGo" type="button">내 다육이 찾으러 가기!</button>`
+              :`<button class="iconbtn" id="storySkip" type="button">이야기 건너뛰기</button><button class="big green" id="storyNext" type="button">다음</button>`}
+    </div>
+  </section>`;
+  const next=()=>{ if(state.screen!=="story") return; if(S.last){ goQuestions(); return; } beep(620+i*40,.06); state.si=i+1; render(); };
+  const goQuestions=()=>{ beep(784); state={screen:"q",qi:0,answers:[]}; render(); };
+  const n=document.getElementById("storyNext"); if(n) n.onclick=next;
+  const g=document.getElementById("storyGo"); if(g) g.onclick=goQuestions;
+  const k=document.getElementById("storySkip"); if(k) k.onclick=goQuestions;
+  const a=document.getElementById("storyAgain"); if(a) a.onclick=()=>{ beep(600); state={screen:"story",si:0,qi:0,answers:[]}; render(); };
+  document.getElementById("storypic").onclick=next;
+  if(!S.last) storyTimer=setTimeout(next,STORY_MS);
+}
+
+function renderOops(){
+  stage.innerHTML=`<section class="screen" style="justify-content:center">
+    <h2>앗, 잠깐만요!</h2>
+    <p class="lead">인터넷이 잠깐 끊겼어요. 선생님을 불러 주세요.</p>
+    <div class="actions"><button class="big green" id="retry" type="button">다시 해 보기</button></div>
+    <button class="iconbtn" id="home" type="button">처음으로</button>
+  </section>`;
+  document.getElementById("retry").onclick=()=>{state.screen="magic";render();};
+  document.getElementById("home").onclick=()=>{Store.pending=null;state={screen:"start",qi:0,answers:[]};render();};
+}
+function renderAllGone(){
+  stage.innerHTML=`<section class="screen" style="justify-content:center">
+    <h2>오늘 다육이들이 모두 새 친구를 찾았어요!</h2>
+    <p class="lead">와 주셔서 고마워요 🌿 선생님께 알려 주세요.</p>
+    <button class="iconbtn" id="home" type="button">처음으로</button>
+  </section>`;
+  document.getElementById("home").onclick=()=>{state={screen:"start",qi:0,answers:[]};render();};
+}
+function renderStart(){
+  const left=totalLeft();
+  if(REQUIRE_SHARED && Store.status!=="shared"){
+    stage.innerHTML=`<section class="screen" style="justify-content:center">
+      <h1>${Store.status==="connecting"?"준비하는 중이에요…":"잠깐만요!"}</h1>
+      <p class="lead">${Store.status==="connecting"
+        ?"다육이 개수를 불러오고 있어요."
+        :"구글 시트와 연결되지 않았어요. 선생님이 인터넷을 확인한 뒤 새로고침해 주세요."}</p>
+      ${Store.status==="connecting"?"":`<p class="sync" style="max-width:40ch">${Store.lastErr||""}</p>`}
+    </section>`;
+    return;
+  }
+  stage.innerHTML=`<section class="screen">
+    <h1>내 소원을 들어줘!<br><em>다육이 친구</em>를 찾아볼까?</h1>
+    <p class="lead">질문 4개에 답하면, 나랑 꼭 맞는 다육이를 추천해줘요.</p>
+    <div class="shelf">${ORDER.map(k=>{return `<div class="friend">
+      <div class="bob">${plantSVG(k)}</div><b>${KINDS[k].real}</b></div>`}).join("")}</div>
+    ${left?`<button class="big" id="go" type="button">시작하기!</button>`
+          :`<h2>오늘 다육이들이 모두 새 친구를 찾았어요!</h2><p class="lead">와 주셔서 고마워요 🌿</p>`}
+  </section>`;
+  const go=document.getElementById("go");
+  if(go) go.onclick=()=>{beep(784);state=storyOn?{screen:"story",si:0,qi:0,answers:[]}:{screen:"q",qi:0,answers:[]};render();};
+}
+
+function shuffled(n){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function renderQ(){
+  const Q=QUESTIONS[state.qi];
+  stage.innerHTML=`<section class="screen" style="justify-content:center">
+    <div class="sprouts" aria-label="${state.qi+1}번째 질문, 모두 ${QUESTIONS.length}개">${QUESTIONS.map((_,i)=>
+      `<div class="sprout ${i<state.qi?"done":i===state.qi?"now":""}">${i<state.qi?"🌱":""}</div>`).join("")}</div>
+    <div class="qnum">질문 ${state.qi+1}</div>
+    <h2>${Q.q}</h2>
+    <div class="choices">${shuffled(Q.opts.length).map(i=>{const o=Q.opts[i];return `<button class="choice" type="button" data-i="${i}">
+      ${o.sw?`<div class="sw" style="background:${o.sw}"><b aria-hidden="true">${o.p}</b></div>`:`<div class="pic" aria-hidden="true">${o.p}</div>`}
+      <span>${o.t}</span></button>`}).join("")}</div>
+    ${state.qi>0?`<button class="iconbtn" id="back" type="button">← 앞으로 돌아가기</button>`
+                :`<button class="iconbtn" id="storyAgainQ" type="button">↺ 이야기 다시 보기</button>`}
+  </section>`;
+  stage.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{
+    if(stage.querySelector(".picked")) return;
+    b.classList.add("picked"); beep(600+state.qi*120);
+    state.answers[state.qi]=+b.dataset.i;
+    setTimeout(()=>{ if(state.qi<QUESTIONS.length-1){state.qi++;render();} else {state.screen="magic";render();} },420);
+  });
+  const sa=document.getElementById("storyAgainQ");
+  if(sa) sa.onclick=()=>{ beep(600); state={screen:"story",si:0,qi:0,answers:[]}; render(); };
+  const back=document.getElementById("back");
+  if(back) back.onclick=()=>{state.qi--;state.answers.length=state.qi;render();};
+}
+
+function decide(){
+  const score={}; ORDER.forEach(k=>score[k]=0);
+  state.answers.forEach((ai,qi)=>{const s=QUESTIONS[qi].opts[ai].s;for(const k in s) score[k]+=s[k];});
+  // keep the 200 pots balanced: a small bonus for kinds with more left breaks near-ties
+  return ORDER
+    .map(k=>({k, out:Store.left(k)<=0, v:score[k] + 1.5*Store.left(k)/Math.max(1,Store.supply(k)) + Math.random()*.01}))
+    .sort((a,b)=>(a.out-b.out)||(b.v-a.v))
+    .map(c=>c.k);
+}
+
+function renderMagic(){
+  const order=decide();
+  stage.innerHTML=`<section class="screen magic" style="justify-content:center">
+    <div class="spin"><svg viewBox="0 0 200 200" aria-hidden="true">
+      <path d="M100 20l18 46 50 4-38 32 12 48-42-26-42 26 12-48-38-32 50-4z" fill="var(--sun)"/>
+      <circle cx="84" cy="96" r="6" fill="#5a3d00"/><circle cx="116" cy="96" r="6" fill="#5a3d00"/>
+      <path d="M88 114q12 10 24 0" stroke="#5a3d00" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>
+    <h2>다육이 요정이 찾고 있어요<span class="dots"><span>.</span><span>.</span><span>.</span></span></h2>
+  </section>`;
+  [440,550,660].forEach((f,i)=>setTimeout(()=>beep(f,.07),i*300));
+  const minWait=sleep(1800);
+  Store.claim(order).then(async res=>{
+    await minWait;
+    if(res.error){ state.screen="oops"; render(); return; }
+    if(!res.kind){ state.screen="allgone"; render(); return; }
+    state.screen="result"; state.kind=res.kind; render(); fanfare(); confetti();
+  });
+}
+
+function renderResult(){
+  const k=state.kind, K=KINDS[k];
+  const liked=state.answers.map((ai,qi)=>QUESTIONS[qi].opts[ai]).filter(o=>o.s[k]).map(o=>o.t);
+  const why = liked.length
+    ? `<b>${liked.map(t=>`‘${t}’`).join(", ")}</b> 골랐지? 그래서 ${K.trait} 너에게 딱 맞아요!`
+    : `${K.trait} 다육이가 너를 기다리고 있었대요!`;
+  stage.innerHTML=`<section class="screen">
+    <div class="result">
+      <div class="hero"><div class="bob">${plantSVG(k)}</div><span class="tag">${K.real}</span></div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="r-title">너의 다육이 친구는…</div>
+        <h2 class="r-name">${K.name}</h2>
+        <p class="why">${why}</p>
+        <p class="wish">“${K.wish}”</p>
+        <div class="care">${K.care.map(([i,t])=>`<div><b aria-hidden="true">${i}</b>${t}</div>`).join("")}</div>
+      </div>
+    </div>
+    <p class="lead" style="max-width:none">이제 <b style="color:var(--pink)">네임스티커</b>에 소원을 적어서 화분에 붙여 주세요 ✏️</p>
+    <div class="actions">
+      <button class="big green" id="next" type="button">선생님 확인 받기</button>
+    </div>
+  </section>`;
+  document.getElementById("next").onclick=()=>{beep(700);openGate();};
+}
+
+function confetti(){
+  const box=document.getElementById("confetti"); if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols=["#ff7a9c","#ffd25c","#5cc07a","#8fd3f0","#c9a7ff"];
+  for(let i=0;i<70;i++){const e=document.createElement("i");e.style.left=Math.random()*100+"vw";
+    e.style.background=cols[i%5];e.style.animationDuration=(1.8+Math.random()*1.8)+"s";e.style.animationDelay=Math.random()*.4+"s";
+    box.appendChild(e);setTimeout(()=>e.remove(),4200);}
+}
+
+/* ---------- start gate: a teacher enters 012 before each child's turn ---------- */
+const START_PIN="568"; let gpin="", gerr=false;
+const gate=document.getElementById("gate");
+function openGate(){ gpin=""; gerr=false; gate.hidden=false; renderGate(); }
+function closeGate(){ gate.hidden=true; gpin=""; gerr=false; }
+function renderGate(){
+  gate.innerHTML=`<div class="gatebox" role="dialog" aria-label="선생님 확인">
+    <div class="gatehead"><b>선생님 확인</b><button class="iconbtn" id="gclose" type="button">닫기</button></div>
+    <p class="sync" style="margin:0;text-align:center">다육이를 건네준 뒤 선생님이 번호 3자리를 눌러 주세요.<br>그러면 다음 친구 차례로 넘어가요.</p>
+    <div class="pindots ${gerr?"shake":""}">${[0,1,2].map(i=>`<i class="${i<gpin.length?"on":""}"></i>`).join("")}</div>
+    ${gerr?`<p class="sync" style="margin:0;color:var(--danger);text-align:center">번호가 달라요. 다시 눌러 주세요.</p>`:""}
+    <div class="pinpad">${["1","2","3","4","5","6","7","8","9","","0","del"].map(d=>d===""?"<span></span>":
+      `<button class="pbtn pinkey" type="button" data-g="${d}" aria-label="${d==="del"?"하나 지우기":d}">${d==="del"?"⌫":d}</button>`).join("")}</div>
+  </div>`;
+  gate.querySelector("#gclose").onclick=closeGate;
+  gate.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>gatePress(b.dataset.g));
+}
+function gatePress(d){
+  gerr=false;
+  if(d==="del") gpin=gpin.slice(0,-1); else if(gpin.length<3) gpin+=d;
+  if(gpin.length===3){
+    if(gpin===START_PIN){ closeGate(); beep(880); state={screen:"start",qi:0,answers:[]}; render(); return; }
+    gpin=""; gerr=true;
+  }
+  renderGate();
+}
+gate.addEventListener("click",e=>{if(e.target===gate) closeGate();});
+document.addEventListener("keydown",e=>{ if(gate.hidden) return;
+  if(/^[0-9]$/.test(e.key)) gatePress(e.key); else if(e.key==="Backspace") gatePress("del"); else if(e.key==="Escape") closeGate(); });
+
+/* ---------- staff drawer ---------- */
+let confirming=false, editing=null, draft="", unlocked=false, pin="", pinErr=false;
+const STAFF_PIN="261017";
+function renderPin(){
+  drawer.innerHTML=`<div class="panel" role="dialog" aria-label="선생님 메뉴 암호">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h3>선생님 메뉴</h3>
+      <button class="iconbtn" id="close" type="button">닫기</button></div>
+    <p class="sync" style="margin:0">암호 6자리를 눌러 주세요.</p>
+    <div class="pindots ${pinErr?"shake":""}" aria-live="polite">${[0,1,2,3,4,5].map(i=>`<i class="${i<pin.length?"on":""}"></i>`).join("")}</div>
+    ${pinErr?`<p class="sync" style="margin:0;color:var(--danger);text-align:center">암호가 달라요. 다시 눌러 주세요.</p>`:""}
+    <div class="pinpad">${["1","2","3","4","5","6","7","8","9","","0","del"].map(d=>d===""?"<span></span>":
+      `<button class="pbtn pinkey" type="button" data-pin="${d}" aria-label="${d==="del"?"하나 지우기":d}">${d==="del"?"⌫":d}</button>`).join("")}</div>
+  </div>`;
+  drawer.querySelector("#close").onclick=closeDrawer;
+  drawer.querySelectorAll("[data-pin]").forEach(b=>b.onclick=()=>pinPress(b.dataset.pin));
+}
+function pinPress(d){
+  pinErr=false;
+  if(d==="del") pin=pin.slice(0,-1); else if(pin.length<6) pin+=d;
+  if(pin.length===6){
+    if(pin===STAFF_PIN){ unlocked=true; pin=""; renderDrawer(); return; }
+    pin=""; pinErr=true;
+  }
+  renderPin();
+}
+document.addEventListener("keydown",e=>{ if(drawer.hidden||unlocked) return;
+  if(/^[0-9]$/.test(e.key)) pinPress(e.key); else if(e.key==="Backspace") pinPress("del"); else if(e.key==="Escape") closeDrawer(); });
+function renderDrawer(){
+  if(!unlocked){ renderPin(); return; }
+  const c=Store.counts(), all=ORDER.reduce((a,k)=>a+c[k],0), sup=ORDER.reduce((a,k)=>a+Store.supply(k),0);
+  drawer.innerHTML=`<div class="panel" role="dialog" aria-label="선생님 메뉴">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h3>선생님 메뉴</h3>
+      <button class="iconbtn" id="close" type="button">닫기</button></div>
+    <table><thead><tr><th>바구니</th><th>다육이</th><th class="n">나눠줌</th><th class="n">남음</th></tr></thead><tbody>
+    ${ORDER.map(k=>{const l=Store.left(k),s=Store.supply(k);return `<tr><td>${KINDS[k].basket}번</td><td>${KINDS[k].real}<div class="r-real" style="font-size:13px">${KINDS[k].name}</div>
+      <div class="bar"><i style="width:${s?Math.min(100,l/s*100):0}%"></i></div></td><td class="n">${c[k]}</td><td class="n"><b>${l}</b></td></tr>`}).join("")}
+    <tr><td></td><td><b>합계</b></td><td class="n">${all}</td><td class="n"><b>${totalLeft()}</b> / ${sup}</td></tr>
+    </tbody></table>
+    <div class="adj"><div class="adjrow"><span class="adjname"><b>처음에 이야기 보여 주기</b><br><span class="sync">질문 전에 1분 정도의 그림 이야기가 나와요. 줄이 길면 꺼 두세요. (이 패드에만 적용)</span></span>
+      <button class="pbtn sm ${storyOn?"onbtn":""}" id="storyToggle" type="button" aria-pressed="${storyOn}">${storyOn?"켜짐":"꺼짐"}</button></div></div>
+    <div class="adj">
+      <h4>남은 개수 직접 맞추기</h4>
+      <p class="sync" style="margin:0">바구니에 실제로 남은 화분 수와 다를 때 고쳐 주세요. 화분이 더 생기면 +, 다치거나 따로 나눠줬으면 − 를 눌러요.</p>
+      ${ORDER.map(k=>{const l=Store.left(k);return editing===k
+        ? `<div class="adjrow"><span class="adjname">${KINDS[k].basket}번 ${KINDS[k].real}</span>
+            <input id="adjInput" type="number" inputmode="numeric" min="0" max="999" value="${draft}" aria-label="${KINDS[k].real} 남은 개수">
+            <button class="pbtn sm" type="button" data-apply="${k}">적용</button><button class="pbtn sm" type="button" data-cancel="1">취소</button></div>`
+        : `<div class="adjrow"><span class="adjname">${KINDS[k].basket}번 ${KINDS[k].real}</span>
+            <button class="pbtn sm step" type="button" data-k="${k}" data-d="-1" aria-label="${KINDS[k].real} 하나 빼기" ${l?"":"disabled"}>−</button>
+            <button class="adjnum" type="button" data-edit="${k}" aria-label="${KINDS[k].real} 남은 개수 직접 입력">${l}</button>
+            <button class="pbtn sm step" type="button" data-k="${k}" data-d="1" aria-label="${KINDS[k].real} 하나 더하기">+</button></div>`}).join("")}
+    </div>
+    <button class="pbtn" id="undo" type="button" ${Store.myLast.length?"":"disabled"}>방금 추천 하나 취소하기 (화분을 안 받아 갔을 때)</button>
+    ${confirming?`<div class="confirm"><b>정말 처음부터 다시 셀까요?</b><span class="sync">모든 다육이가 다시 40개로 돌아가고, 직접 맞춘 개수도 지워져요.</span>
+      <div class="row"><button class="pbtn" id="no" type="button">아니요</button><button class="pbtn warn" id="yes" type="button">네, 초기화</button></div></div>`
+      :`<button class="pbtn warn" id="reset" type="button">재고 초기화 (행사 시작 전)</button>`}
+    <div class="adj"><h4>구글 시트 연결</h4>
+      <p class="sync" style="margin:0">${Store.local
+        ? "<b style='color:var(--danger)'>시트 주소(SCRIPT_URL)가 비어 있어서, 이 기기 안에서만 세고 있어요.</b> 여러 패드가 같은 재고를 쓰려면 index.html의 CONFIG에 주소를 넣어 주세요."
+        : Store.status==="shared"
+          ? `모든 패드가 구글 시트 하나로 재고를 함께 써요. 15초마다 새로 불러와요.${Store.lastSync?`<br>마지막으로 불러온 시각: ${new Date(Store.lastSync).toLocaleTimeString("ko-KR")}`:""}`
+          : Store.status==="connecting" ? "구글 시트에 연결하는 중이에요." : `<b style='color:var(--danger)'>${Store.lastErr||"구글 시트에 연결하지 못했어요."}</b>`}</p>
+      <div class="adjrow">${Store.local?"":`<button class="pbtn sm" id="refreshNow" type="button">지금 새로 불러오기</button>`}
+        ${CONFIG.SHEET_URL?`<a class="sheetlink" href="${CONFIG.SHEET_URL}" target="_blank" rel="noopener">구글 시트 열기 ↗</a>`:""}</div></div>
+    <p class="sync">${Store.status==="connecting" ? "재고를 불러오는 중이에요." : Store.local
+      ? "이 기기 안에서만 개수를 세고 있어요."
+      : "로그인한 모든 기기가 같은 재고를 함께 써요. 다른 태블릿에서 추천해도 바로 줄어들어요."}
+      ${syncMsg?`<br><b style="color:var(--danger)">${syncMsg}</b>`:""}</p>
+  </div>`;
+  drawer.querySelector("#close").onclick=closeDrawer;
+  bindSync();
+  const rn=drawer.querySelector("#refreshNow"); if(rn) rn.onclick=async()=>{ rn.disabled=true; rn.textContent="불러오는 중…"; await Store.refresh(); renderDrawer(); };
+  drawer.querySelector("#storyToggle").onclick=()=>{ storyOn=!storyOn; try{localStorage.setItem("dayuk-story",storyOn?"on":"off");}catch(e){} renderDrawer(); };
+  drawer.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{const k=b.dataset.k,d=+b.dataset.d;
+    if(d<0&&Store.left(k)<=0) return; await Store.adjust(k,d); renderDrawer();});
+  drawer.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{editing=b.dataset.edit;draft=String(Store.left(editing));renderDrawer();
+    const i=drawer.querySelector("#adjInput"); if(i){i.focus();i.select();}});
+  const inp=drawer.querySelector("#adjInput");
+  if(inp){ inp.oninput=()=>{draft=inp.value;}; inp.onkeydown=e=>{if(e.key==="Enter") drawer.querySelector("[data-apply]").click(); if(e.key==="Escape"){editing=null;renderDrawer();}}; }
+  const ap=drawer.querySelector("[data-apply]");
+  if(ap) ap.onclick=async()=>{const k=ap.dataset.apply, v=parseInt(draft,10);
+    if(isNaN(v)||v<0){ toastSync("0 이상의 숫자를 넣어 주세요."); return; }
+    syncMsg=""; editing=null; await Store.setLeft(k, v); renderDrawer();};
+  const cn=drawer.querySelector("[data-cancel]"); if(cn) cn.onclick=()=>{editing=null;renderDrawer();};
+  drawer.querySelector("#undo").onclick=async()=>{await Store.undo();renderDrawer();};
+  const r=drawer.querySelector("#reset"); if(r) r.onclick=()=>{confirming=true;renderDrawer();};
+  const n=drawer.querySelector("#no"); if(n) n.onclick=()=>{confirming=false;renderDrawer();};
+  const y=drawer.querySelector("#yes"); if(y) y.onclick=async()=>{confirming=false;await Store.reset();renderDrawer();};
+}
+/* sheet is the store: no separate sync step */
+const Sync={dirty:false}; function bindSync(){}
+function closeDrawer(){drawer.hidden=true;confirming=false;editing=null;unlocked=false;pin="";pinErr=false;}
+document.getElementById("staffBtn").onclick=()=>{drawer.hidden=false;renderDrawer();};
+drawer.addEventListener("click",e=>{if(e.target===drawer) closeDrawer();});
+document.getElementById("soundBtn").onclick=e=>{soundOn=!soundOn;e.target.textContent=soundOn?"소리 켜짐":"소리 꺼짐";e.target.setAttribute("aria-pressed",soundOn);};
+
+Store.listeners.push(()=>{ Sync.dirty=true; });
+
+Store.listeners.push(()=>{ const m=document.getElementById("modeTag"); if(m) m.hidden=!Store.local; });
+Store.listeners.push(()=>{ if(state.screen==="start") renderStart(); if(!drawer.hidden && !editing) renderDrawer(); });
+render();
+Store.init();
+</script>
+
+</body>
+</html>
