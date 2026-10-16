@@ -333,11 +333,13 @@ function plantSVG(k){
                 비워 두면 시트 없이 "이 기기 안에서만" 세는 체험 모드로 동작해요.
    APP_KEY    : Code.gs 맨 위의 APP_KEY와 똑같이
    SHEET_URL  : (선택) 구글 시트 주소. 선생님 메뉴에 '시트 열기' 링크가 생겨요.
+   RESET_COUNT: 선생님 메뉴에서 '재고 초기화'를 누르면 종류마다 이 개수로 맞춰요. (오전·오후 나눠 쓰기: 20)
    ===================================================================== */
 const CONFIG = {
   SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzI1xKpAysCMUSP0ZwPv7kC84PjoAPZ7ei_8DaCprRRK-7eO9ZbykO-R81q27MIfDY4/exec",
   APP_KEY: "dayuk-2026",
-  SHEET_URL: "https://docs.google.com/spreadsheets/d/1YWLHve102VGwq-bHA8ejAs8xRBYg8sd8d_VN-lWTuLs/edit"
+  SHEET_URL: "https://docs.google.com/spreadsheets/d/1YWLHve102VGwq-bHA8ejAs8xRBYg8sd8d_VN-lWTuLs/edit",
+  RESET_COUNT: 20
 };
 
 /* ---------- stock store: one Google Sheet shared by every pad (via Apps Script) ---------- */
@@ -418,10 +420,25 @@ const Store = {
     if(this.local){ this.picks=this.picks.filter(p=>p.id!==id); this.saveLocal(); this.emit(); return; }
     await this.write("undo",{id},"취소가 저장되지 않았어요.");
   },
+  /* Start a new round, then set every kind to RESET_COUNT (e.g. 20 for a morning or afternoon session).
+     Uses the sheet's existing "reset" and "setLeft" actions, so Code.gs does not need redeploying. */
   async reset(){
     this.myLast=[];
-    if(this.local){ this.picks=[]; this.saveLocal(); this.emit(); return; }
-    await this.write("reset",{},"초기화가 안 됐어요. 다시 눌러 주세요.");
+    const n=Math.max(0,Math.trunc(Number(CONFIG.RESET_COUNT)));
+    const target=isNaN(n)?TOTAL:n;
+    if(this.local){
+      this.picks=[]; if(target!==TOTAL) ORDER.forEach(k=>this.picks.push({id:newId("a"),kind:k,add:target-TOTAL,at:Date.now()}));
+      this.saveLocal(); this.emit(); return true;
+    }
+    this.resetting=true; this.emit();
+    try{
+      if(!await this.write("reset",{},"초기화가 안 됐어요. 다시 눌러 주세요.")) return false;
+      if(target===TOTAL) return true;
+      for(const k of ORDER){
+        if(!await this.write("setLeft",{kind:k,value:target},`${KINDS[k].real} 개수를 ${target}개로 맞추지 못했어요. 다시 눌러 주세요.`)) return false;
+      }
+      return true;
+    } finally { this.resetting=false; this.emit(); }
   }
 };
 let syncMsg="";
@@ -763,9 +780,10 @@ function renderDrawer(){
             <button class="pbtn sm step" type="button" data-k="${k}" data-d="1" aria-label="${KINDS[k].real} 하나 더하기">+</button></div>`}).join("")}
     </div>
     <button class="pbtn" id="undo" type="button" ${Store.myLast.length?"":"disabled"}>방금 추천 하나 취소하기 (화분을 안 받아 갔을 때)</button>
-    ${confirming?`<div class="confirm"><b>정말 처음부터 다시 셀까요?</b><span class="sync">모든 다육이가 다시 40개로 돌아가고, 직접 맞춘 개수도 지워져요.</span>
+    ${confirming?`<div class="confirm"><b>정말 처음부터 다시 셀까요?</b><span class="sync">모든 다육이가 <b>${CONFIG.RESET_COUNT??TOTAL}개씩</b>으로 다시 시작해요. 지금까지 나눠준 수와 직접 맞춘 개수는 새 회차에서 빠져요. (기록은 시트에 남아요)</span>
       <div class="row"><button class="pbtn" id="no" type="button">아니요</button><button class="pbtn warn" id="yes" type="button">네, 초기화</button></div></div>`
-      :`<button class="pbtn warn" id="reset" type="button">재고 초기화 (행사 시작 전)</button>`}
+      : Store.resetting ? `<button class="pbtn warn" type="button" disabled>초기화하는 중… (${CONFIG.RESET_COUNT??TOTAL}개씩 맞추는 중)</button>`
+      :`<button class="pbtn warn" id="reset" type="button">재고 초기화 → 종류마다 ${CONFIG.RESET_COUNT??TOTAL}개 (오전·오후 시작 전)</button>`}
     <div class="adj"><h4>구글 시트 연결</h4>
       <p class="sync" style="margin:0">${Store.local
         ? "<b style='color:var(--danger)'>시트 주소(SCRIPT_URL)가 비어 있어서, 이 기기 안에서만 세고 있어요.</b> 여러 패드가 같은 재고를 쓰려면 index.html의 CONFIG에 주소를 넣어 주세요."
