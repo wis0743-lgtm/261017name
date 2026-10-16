@@ -7,6 +7,8 @@
 |---|---|
 | `index.html` | 아이들이 쓰는 앱 (GitHub Pages에 올려요) |
 | `Code.gs` | 구글 시트에 붙이는 재고 서버 스크립트 |
+| `care.html` | 부모님용 다육이 돌봄 안내 (결과 화면 QR로 열려요) |
+| `qrcode.js` | QR 코드를 그리는 라이브러리 (MIT, Kazuhiko Arase) |
 | `README.md` | 이 안내서 |
 
 ---
@@ -47,7 +49,7 @@ const CONFIG = {
 ## 3단계. GitHub에 올리기
 
 1. GitHub에서 **New repository**를 만들어요. 예: `dayuk-app` (Public)
-2. **Add file → Upload files**로 `index.html`을 올리고 **Commit changes**를 눌러요.
+2. **Add file → Upload files**로 `index.html`, `care.html`, `qrcode.js`를 함께 올리고 **Commit changes**를 눌러요.
 3. **Settings → Pages**에서 Branch를 **main / (root)**로 고르고 **Save**를 눌러요.
 4. 1~2분 뒤 `https://내아이디.github.io/dayuk-app/` 주소로 앱이 열려요.
 
@@ -76,6 +78,7 @@ const CONFIG = {
 ## 행사 중
 
 - 시작하기 → 이야기(건너뛰기 가능) → 질문 4개 → 결과 화면의 **노란 표시에 나온 품종**을 건네요.
+- 결과 화면의 **QR 코드**를 부모님 휴대폰 카메라로 찍으면, 받은 품종이 맨 위에 나오는 돌봄 안내(`care.html`)가 열려요. 그 화면을 캡처해 두시면 돼요.
 - **선생님 확인 받기 → 568**을 누르면 다음 아이 차례예요.
 - 화분을 못 받아 갔으면 선생님 메뉴 → "방금 추천 하나 취소하기"를 눌러요.
 - 실제 개수와 다르면 선생님 메뉴 → "남은 개수 직접 맞추기"로 고쳐요.

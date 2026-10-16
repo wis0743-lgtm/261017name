@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e7f4ec">
+<title>다육이 돌봄 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Parents open this from the QR on the app's result screen. ?p=<kind> puts the child's plant on top so one screenshot holds what they need. */
+:root{
+  --bg:#e7f4ec; --card:#ffffff; --ink:#1f3d2f; --ink-soft:#4b6a5c; --leaf-deep:#2b7a4f;
+  --pink-ink:#b8335a; --sun:#ffd25c; --line:#c5e2d2; --chip:#f2faf5; --warn:#fdeee9;
+  --display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13241c; --card:#1e3a2d; --ink:#eaf7ef; --ink-soft:#a9c9b8; --leaf-deep:#8fe0ad;
+  --pink-ink:#ff9fb8; --sun:#ffd96f; --line:#2f5442; --chip:#244536; --warn:#3a2a2a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13241c; --card:#1e3a2d; --ink:#eaf7ef; --ink-soft:#a9c9b8; --leaf-deep:#8fe0ad;
+  --pink-ink:#ff9fb8; --sun:#ffd96f; --line:#2f5442; --chip:#244536; --warn:#3a2a2a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;word-break:keep-all}
+main{max-width:620px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.3}
+h1{font-size:32px;color:var(--leaf-deep)}
+h2{font-size:24px}
+h3{font-size:20px}
+p{margin:0}
+.soft{color:var(--ink-soft)}
+section{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.mine{border:3px solid var(--sun);gap:10px}
+.mine .badge{align-self:flex-start;background:var(--sun);color:#5a3d00;border-radius:999px;padding:4px 14px;font-family:var(--display);font-size:16px}
+.mine h2{font-size:30px}
+.mine ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.point{font-weight:700;color:var(--pink-ink)}
+.tip{background:var(--chip);border-radius:12px;padding:10px 14px;font-size:15px;color:var(--ink-soft)}
+.card.rule{flex-direction:row;gap:14px;align-items:flex-start}
+.rule svg{flex-shrink:0;width:34px;height:34px;stroke:var(--leaf-deep)}
+.when{font-size:15px;font-weight:700;color:var(--leaf-deep)}
+.key{background:var(--leaf-deep);color:var(--bg);border-radius:14px;padding:14px 16px;font-weight:700}
+.list{background:var(--card);border-radius:18px;overflow:hidden}
+.list div{padding:14px 18px;border-bottom:1px solid var(--line)}
+.list div:last-child{border-bottom:0}
+.list b{display:block}
+.extra{border:2px dashed var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:6px}
+footer{text-align:center;font-size:14px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<main>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>다육이 돌봄 안내</h1>
+    <p class="soft">오늘 받아 온 다육이와 오래 함께하는 방법이에요. 지금 가을은 다육이가 잘 자라고 예쁘게 물드는 계절이랍니다.</p>
+  </header>
+
+  <section id="mineBox" hidden></section>
+
+  <section aria-labelledby="h-rules">
+    <h2 id="h-rules">꼭 지킬 세 가지</h2>
+    <div class="card rule">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.5-6.8 6-11z"/></svg>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h3>물은 흙이 완전히 마른 뒤에</h3>
+        <p class="soft">나무젓가락을 흙에 2~3cm 꽂아 보고, 젖은 흙이 묻어나지 않으면 물 줄 때예요. 화분 구멍으로 물이 나올 만큼 흠뻑 주고, 받침에 고인 물은 바로 버려요.</p>
+        <p class="when">가을 7~14일에 한 번 · 겨울 2~4주에 한 번 조금</p>
+      </div>
+    </div>
+    <div class="card rule">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h3>밝은 창가, 바람 통하는 곳</h3>
+        <p class="soft">하루 4시간 이상 햇빛을 받게 해 주세요. 습하고 바람이 막힌 곳에서는 쉽게 물러요.</p>
+      </div>
+    </div>
+    <div class="card rule">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 11v5"/></svg>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h3>밤 기온 5℃ 아래면 실내로</h3>
+        <p class="soft">11월부터는 실내 창가가 안전해요. 난방기 바로 앞은 피해 주세요.</p>
+      </div>
+    </div>
+    <p class="key">헷갈리면 하루 더 기다리기! 다육이는 물이 부족할 때보다 너무 많을 때 더 쉽게 죽어요.</p>
+  </section>
+
+  <section aria-labelledby="h-kinds">
+    <h2 id="h-kinds">다섯 친구의 특징</h2>
+    <div id="kinds" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <section aria-labelledby="h-signs">
+    <h2 id="h-signs">이런 모습이 보이면</h2>
+    <div class="list">
+      <div><b>줄기가 길게 늘어지고 색이 연해져요</b><span class="soft">햇빛 부족 → 더 밝은 곳으로 옮기기</span></div>
+      <div><b>잎이 쭈글쭈글하고 얇아져요</b><span class="soft">물 부족 → 흠뻑 물 주기</span></div>
+      <div><b>잎이 물렁하고 투명해지거나 검게 변해요</b><span class="soft">물이 너무 많아요 → 물 끊고 바람 잘 통하는 곳에</span></div>
+      <div><b>잎에 갈색 반점, 탄 자국이 생겨요</b><span class="soft">햇빛이 너무 강해요 → 반그늘로 옮기기</span></div>
+    </div>
+  </section>
+
+  <section class="extra">
+    <h2 style="font-size:20px">떨어진 잎도 버리지 마세요</h2>
+    <p class="soft">애플캔디, 어메이징그레이스, 엘린, 미니염좌는 떨어진 잎을 흙 위에 올려 두기만 해도 몇 주 뒤 작은 뿌리와 새싹이 나와요. 이걸 '잎꽂이'라고 해요.</p>
+  </section>
+
+  <footer>다육이 소원 공작소</footer>
+</main>
+
+<script>
+/* keys match KINDS in index.html */
+const PLANTS = {
+  star:  {real:"수", nick:"반짝 보석이", group:"하월시아 계열", point:"강한 직사광선은 싫어해요",
+          text:"커튼 너머 밝은 빛이나 반그늘이 딱 좋아요. 잎 끝의 투명한 '창'으로 빛을 받아요. 잎이 붉거나 갈색으로 타면 조금 그늘로 옮겨 주세요.",
+          todo:["커튼 너머 밝은 곳에 두기","흙이 마르면 물 주기 (다른 친구보다 조금 자주 줘도 괜찮아요)","잎이 타면 그늘로 옮기기"]},
+  bean:  {real:"애플캔디", nick:"새콤 사과사탕", group:"장미 모양 로제트형", point:"햇빛을 아주 좋아해요",
+          text:"빛이 부족하면 줄기가 길게 늘어지는 '웃자람'이 생겨요. 가을 햇빛과 큰 일교차를 받으면 분홍빛, 붉은빛으로 물들어요.",
+          todo:["해가 잘 드는 창가에 두기","흙이 완전히 마르면 흠뻑 물 주기","잎 가운데에 물이 고이지 않게 흙에 붓기"]},
+  rose:  {real:"어메이징그레이스", nick:"장미 요정", group:"장미 모양 로제트형", point:"햇빛을 아주 좋아해요",
+          text:"햇빛이 충분하면 잎끝이 분홍빛으로 물들어요. 잎의 하얀 가루는 스스로를 지키는 보호막이라 문지르지 마세요.",
+          todo:["해가 잘 드는 창가에 두기","흙이 완전히 마르면 흠뻑 물 주기","하얀 가루는 닦지 않기"]},
+  brave: {real:"엘린", nick:"뾰족 용감이", group:"장미 모양 로제트형", point:"햇빛을 아주 좋아해요",
+          text:"햇빛을 잘 받으면 뾰족한 잎끝이 빨갛게 물들어요. 빛이 부족하면 잎 간격이 벌어지며 길쭉해져요.",
+          todo:["해가 잘 드는 창가에 두기","흙이 완전히 마르면 흠뻑 물 주기","잎 가운데에 물이 고이지 않게 흙에 붓기"]},
+  bunny: {real:"미니염좌", nick:"동글 나무", group:"크라슐라 계열", point:"가장 튼튼한 초보자용",
+          text:"햇빛을 잘 받으면 잎 가장자리가 빨갛게 물들어요. 작은 나무처럼 줄기가 굵어지며 자라요. 추위에 약하니 겨울엔 꼭 실내에 두세요.",
+          todo:["해가 잘 드는 창가에 두기","흙이 완전히 마르면 흠뻑 물 주기","겨울엔 꼭 실내로"]},
+};
+const ORDER = ["star","bean","rose","brave","bunny"];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const p = new URLSearchParams(location.search).get("p");
+const mine = PLANTS[p] ? p : null;
+
+if (mine) {
+  const P = PLANTS[mine], box = document.getElementById("mineBox");
+  box.hidden = false;
+  box.innerHTML = `<div class="card mine">
+      <span class="badge">우리 아이의 다육이</span>
+      <div><h2>${esc(P.real)}</h2><p class="soft" style="font-size:15px">앱에서 만난 이름: ${esc(P.nick)}</p></div>
+      <p class="point">${esc(P.point)}</p>
+      <p class="soft">${esc(P.text)}</p>
+      <p class="when">물: 흙이 마르면 · 가을 7~14일, 겨울 2~4주에 한 번</p>
+      <ul>${P.todo.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    </div>
+    <p class="tip">이 화면을 캡처해 두면 언제든 다시 볼 수 있어요. 아래로 내리면 자세한 돌봄 방법이 있어요.</p>`;
+}
+
+document.getElementById("kinds").innerHTML = ORDER.filter(k => k !== mine).map(k => {
+  const P = PLANTS[k];
+  return `<div class="card" id="${k}">
+    <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h3>${esc(P.real)}</h3><span class="soft" style="font-size:14px">${esc(P.group)}</span></div>
+    <p class="point">${esc(P.point)}</p>
+    <p class="soft">${esc(P.text)}</p>
+  </div>`;
+}).join("");
+if (mine) document.getElementById("h-kinds").textContent = "다른 친구들의 특징";
+</script>
+</body>
+</html>

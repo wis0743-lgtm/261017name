@@ -113,6 +113,13 @@ h2{font-size:clamp(28px,5vw,46px)}
 .care b{display:block;font-size:30px;margin-bottom:2px}
 .wish{font-family:var(--display);font-size:clamp(20px,2.8vw,26px);color:var(--pink);margin:0}
 .actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;width:100%}
+/* parent QR on the result screen: always dark-on-white so phone cameras read it in dark mode too */
+.parentqr{display:flex;align-items:center;gap:18px;background:var(--chip);border:2px dashed var(--line);border-radius:22px;padding:10px 18px;max-width:620px;text-align:left}
+.parentqr .qr{flex-shrink:0;width:112px;height:112px;background:#fff;border-radius:12px;padding:8px;box-sizing:border-box}
+.parentqr .qr svg,.parentqr .qr img{display:block;width:100%;height:100%}
+.parentqr h3{font-family:var(--display);font-weight:400;font-size:clamp(20px,2.6vw,24px);margin:0 0 4px;color:var(--leaf-deep)}
+.parentqr p{margin:0;font-size:16px;line-height:1.5;color:var(--ink-soft)}
+@media (max-width:440px){.parentqr{flex-direction:column;text-align:center}}
 .staffnote{font-size:15px;color:var(--ink-soft);background:var(--chip);border-radius:12px;padding:6px 12px;font-variant-numeric:tabular-nums}
 
 .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
@@ -205,6 +212,7 @@ h2{font-size:clamp(28px,5vw,46px)}
 <div class="drawer" id="drawer" hidden></div>
 <div class="gate" id="gate" hidden></div>
 
+<script src="qrcode.js"></script>
 <script>
 const TOTAL = 40;
 const KINDS = {
@@ -682,11 +690,26 @@ function renderResult(){
       </div>
     </div>
     <p class="lead" style="max-width:none">이제 <b style="color:var(--pink)">네임스티커</b>에 소원을 적어서 화분에 붙여 주세요 ✏️</p>
+    ${careQR(k)}
     <div class="actions">
       <button class="big green" id="next" type="button">선생님 확인 받기</button>
     </div>
   </section>`;
   document.getElementById("next").onclick=()=>{beep(700);openGate();};
+}
+
+/* QR to care.html?p=<kind>, next to index.html wherever the app is hosted */
+function careURL(k){ return new URL("care.html?p="+encodeURIComponent(k), location.href).href; }
+function careQR(k){
+  const url=careURL(k);
+  let code="";
+  try{ const q=qrcode(0,"M"); q.addData(url); q.make(); code=q.createSvgTag({cellSize:4,margin:0,scalable:true}); }catch(e){ code=""; }
+  if(!code) return `<div class="parentqr"><div><h3>부모님께</h3><p>돌봄 안내: ${url}</p></div></div>`;
+  return `<div class="parentqr">
+      <div class="qr" role="img" aria-label="${KINDS[k].real} 돌봄 안내 QR 코드">${code}</div>
+      <div><h3>부모님, 휴대폰으로 찍어 주세요</h3>
+      <p>카메라로 QR을 찍으면 <b>${KINDS[k].real}</b> 돌봄 안내가 열려요. 열린 화면을 캡처해 두시면 집에서도 언제든 볼 수 있어요.</p></div>
+    </div>`;
 }
 
 function confetti(){
